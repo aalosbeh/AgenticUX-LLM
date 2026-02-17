@@ -322,10 +322,10 @@ The system includes a Chrome extension (`src/browser_extension/`) that:
 If you use this code in your research, please cite:
 
 ```bibtex
-@article{agentic-ux-2024,
+@article{agentic-ux-2026,
   title={Agentic UX: Autonomous LLM Agents Reshaping Web Interface Architecture},
   author={Research Team},
-  year={2024}
+  year={2026}
 }
 ```
 
