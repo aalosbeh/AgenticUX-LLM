@@ -129,4 +129,3 @@ MIT License - see LICENSE file for details
 ## Contributors
 
 - Research Team
-- Subhanjan Bikram K C — Student Research Assistant; reproducibility alignment, ML pipeline, ablation study, LLM decision layer, documentation support.
