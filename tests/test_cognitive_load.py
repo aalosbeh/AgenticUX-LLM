@@ -8,8 +8,12 @@ from src.core.cognitive_load_model import (
     CognitiveLoadModel,
     CognitiveLoadInput,
     SimpleNeuralNetwork,
-    GradientBoostingEnsemble
+    ResidualLinearEnsemble,
+    RealGradientBoostingModel,
+    SKLEARN_AVAILABLE,
 )
+from src.core.kalman_filter import KalmanFilter
+from src.core.anomaly_detector import BehaviorAnomalyDetector
 
 
 class TestNeuralNetwork(unittest.TestCase):
@@ -51,7 +55,7 @@ class TestGradientBoosting(unittest.TestCase):
     """Test gradient boosting ensemble"""
 
     def setUp(self):
-        self.gb = GradientBoostingEnsemble(n_estimators=5)
+        self.gb = ResidualLinearEnsemble(n_estimators=5)
 
     def test_fit(self):
         """Test fitting"""
@@ -73,6 +77,19 @@ class TestGradientBoosting(unittest.TestCase):
 
         self.assertEqual(predictions.shape, (10,))
         self.assertTrue(np.all((predictions >= 0) & (predictions <= 1)))
+
+    def test_real_gradient_boosting_or_fallback(self):
+        """Real GB class exists when sklearn is available."""
+        if SKLEARN_AVAILABLE:
+            model = RealGradientBoostingModel()
+            x = np.random.randn(20, 10)
+            y = np.random.rand(20, 1)
+            model.fit(x, y)
+            pred = model.predict(x[:5])
+            self.assertEqual(pred.shape, (5,))
+        else:
+            with self.assertRaises(ImportError):
+                RealGradientBoostingModel()
 
 
 class TestCognitiveLoadModel(unittest.TestCase):
@@ -211,6 +228,27 @@ class TestCognitiveLoadModel(unittest.TestCase):
         for name, value in contributions.items():
             self.assertIsInstance(name, str)
             self.assertTrue(0 <= value <= 100)
+
+
+class TestKalmanFilter(unittest.TestCase):
+    def test_smoothing_reduces_jitter(self):
+        kalman = KalmanFilter(process_variance=1e-3, measurement_variance=4.0)
+        noisy = np.array([50, 80, 30, 75, 40, 70, 45], dtype=float)
+        smoothed = np.array([kalman.update(v) for v in noisy], dtype=float)
+        self.assertLess(np.std(smoothed), np.std(noisy))
+
+
+class TestBehaviorAnomalyDetector(unittest.TestCase):
+    def test_anomaly_detector_basic(self):
+        rng = np.random.default_rng(123)
+        x = rng.normal(0, 1, (100, 4))
+        detector = BehaviorAnomalyDetector(fallback_mode="zscore")
+        detector.fit(x)
+        scores = detector.score(x[:10])
+        preds = detector.predict(x[:10])
+        self.assertEqual(scores.shape[0], 10)
+        self.assertEqual(preds.shape[0], 10)
+        self.assertTrue(set(np.unique(preds)).issubset({-1, 1}))
 
 
 if __name__ == '__main__':

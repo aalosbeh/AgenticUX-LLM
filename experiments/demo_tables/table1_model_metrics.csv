@@ -1,0 +1,2 @@
+model_type,MAE,MSE,RMSE,R2,kalman_enabled,llm_agent_enabled,anomaly_detector_enabled,anomaly_detector_mode
+real_gb,6.635687063348048,67.00187671515162,8.185467409693329,-0.0459857658327353,True,True,True,isolation_forest

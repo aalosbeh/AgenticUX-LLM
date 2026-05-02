@@ -8,7 +8,7 @@ import hashlib
 import json
 from typing import Dict, List, Any, Optional, Set
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 import re
 
@@ -148,9 +148,9 @@ class PrivacyManager:
         Returns consent request with options.
         """
         return {
-            "request_id": f"consent_{user_id}_{int(datetime.utcnow().timestamp())}",
+            "request_id": f"consent_{user_id}_{int(datetime.now(timezone.utc).timestamp())}",
             "user_id": user_id,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "purposes": purposes,
             "consent_options": [
                 {
@@ -192,8 +192,8 @@ class PrivacyManager:
         record = ConsentRecord(
             user_id=user_id,
             consent_level=consent_level,
-            timestamp=datetime.utcnow().isoformat(),
-            expires_at=(datetime.utcnow() + timedelta(days=duration_days)).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
+            expires_at=(datetime.now(timezone.utc) + timedelta(days=duration_days)).isoformat(),
             purposes=purposes,
             data_categories=[c.value for c in DataCategory] if consent_level == ConsentLevel.FULL else
                            [DataCategory.BEHAVIORAL.value] if consent_level == ConsentLevel.BASIC else
@@ -219,7 +219,10 @@ class PrivacyManager:
         record = self.user_consents[user_id]
 
         # Check if consent expired
-        if datetime.fromisoformat(record.expires_at) < datetime.utcnow():
+        expires_at = datetime.fromisoformat(record.expires_at)
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        if expires_at < datetime.now(timezone.utc):
             return False
 
         if record.consent_level == ConsentLevel.NONE or record.consent_level == ConsentLevel.EXPLICIT_DENIAL:
@@ -295,8 +298,8 @@ class PrivacyManager:
         return {
             "status": "deletion_requested",
             "user_id": user_id,
-            "request_date": datetime.utcnow().isoformat(),
-            "estimated_completion": (datetime.utcnow() + timedelta(days=30)).isoformat(),
+            "request_date": datetime.now(timezone.utc).isoformat(),
+            "estimated_completion": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
             "message": "Your data deletion request has been submitted. We will complete this within 30 days."
         }
 
@@ -326,7 +329,7 @@ class PrivacyManager:
         """
         export = {
             "user_id": user_id,
-            "export_date": datetime.utcnow().isoformat(),
+            "export_date": datetime.now(timezone.utc).isoformat(),
             "consent_records": []
         }
 
@@ -341,7 +344,7 @@ class PrivacyManager:
     def generate_privacy_report(self) -> Dict[str, Any]:
         """Generate privacy compliance report"""
         return {
-            "report_date": datetime.utcnow().isoformat(),
+            "report_date": datetime.now(timezone.utc).isoformat(),
             "users_with_consent": len(self.user_consents),
             "consent_distribution": self._get_consent_distribution(),
             "deletion_queue_size": len(self.user_deletion_queue),

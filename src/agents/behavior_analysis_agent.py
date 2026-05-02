@@ -8,7 +8,7 @@ import json
 from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import deque
 import numpy as np
 
@@ -37,7 +37,7 @@ class CognitiveLoadLevel(Enum):
 @dataclass
 class InteractionMetrics:
     """Metrics for a single interaction session"""
-    timestamp: datetime = field(default_factory=datetime.utcnow)
+    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     mouse_movement_distance: float = 0.0
     mouse_velocity: float = 0.0
     click_frequency: float = 0.0  # clicks per second

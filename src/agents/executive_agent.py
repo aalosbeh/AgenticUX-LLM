@@ -9,7 +9,7 @@ import json
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, asdict, field
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 logging.basicConfig(level=logging.INFO)
@@ -42,7 +42,7 @@ class AgentMessage:
     recipient: str = ""
     message_type: MessageType = MessageType.REQUEST
     payload: Dict[str, Any] = field(default_factory=dict)
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     priority: int = 5  # 1-10, higher is more urgent
 
     def to_dict(self) -> Dict[str, Any]:
@@ -106,7 +106,7 @@ class ExecutiveAgent:
             "type": agent_type,
             "capabilities": capabilities,
             "status": "registered",
-            "registered_at": datetime.utcnow().isoformat(),
+            "registered_at": datetime.now(timezone.utc).isoformat(),
             "callback": callback
         }
         logger.info(f"Registered agent: {agent_id} ({agent_type})")

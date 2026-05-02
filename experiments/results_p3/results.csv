@@ -1,0 +1,2 @@
+data_source,is_synthetic_demo,seed,n_samples_total,n_train,n_test,model_type,kalman_enabled,llm_agent_enabled,anomaly_detector_enabled,anomaly_detector_mode,MAE,MSE,RMSE,R2
+synthetic_demo,True,42,500,400,100,real_gb,True,False,True,isolation_forest,6.635687063348048,67.00187671515162,8.185467409693329,-0.04598576583273539

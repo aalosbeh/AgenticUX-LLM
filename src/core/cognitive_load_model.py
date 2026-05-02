@@ -1,14 +1,22 @@
 """
-Cognitive Load Model for Agentic UX System
-ML model for real-time cognitive load assessment using gradient boosting and neural networks.
+Cognitive Load Model for Agentic UX System.
+
+Implements an ensemble with optional real gradient boosting and optional Kalman smoothing.
+Falls back to deterministic prototype components when optional dependencies are unavailable.
 """
 
 import logging
-import numpy as np
-from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass
-from datetime import datetime
-import json
+from typing import Any, Dict, List, Optional, Tuple
+
+import numpy as np
+
+try:
+    from sklearn.ensemble import GradientBoostingRegressor
+    SKLEARN_AVAILABLE = True
+except ImportError:  # pragma: no cover - validated in fallback tests
+    GradientBoostingRegressor = None
+    SKLEARN_AVAILABLE = False
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -104,8 +112,11 @@ class SimpleNeuralNetwork:
         return output
 
 
-class GradientBoostingEnsemble:
-    """Simple gradient boosting ensemble for cognitive load prediction"""
+class ResidualLinearEnsemble:
+    """
+    Residual linear ensemble for cognitive load prediction.
+    This is not tree-based gradient boosting; it iteratively fits linear residuals.
+    """
 
     def __init__(self, n_estimators: int = 5):
         self.n_estimators = n_estimators
@@ -115,8 +126,10 @@ class GradientBoostingEnsemble:
 
     def fit(self, x: np.ndarray, y: np.ndarray) -> None:
         """Fit ensemble"""
+        self.estimators = []
+        y = np.asarray(y).reshape(-1)
         # Initialize residuals
-        residuals = y - np.full_like(y, self.initial_prediction)
+        residuals = y - np.full(y.shape[0], self.initial_prediction)
 
         for i in range(self.n_estimators):
             # Create simple linear estimator
@@ -129,13 +142,38 @@ class GradientBoostingEnsemble:
 
     def predict(self, x: np.ndarray) -> np.ndarray:
         """Make prediction"""
-        predictions = np.full(x.shape[0], self.initial_prediction)
+        predictions = np.full(x.shape[0], self.initial_prediction, dtype=float)
 
         for weights in self.estimators:
-            predictions += self.learning_rate * np.dot(x, weights)
+            predictions += self.learning_rate * np.dot(x, np.asarray(weights).reshape(-1))
 
         # Clip to [0, 1] range
         return np.clip(predictions, 0, 1)
+
+
+class RealGradientBoostingModel:
+    """Wrapper around sklearn GradientBoostingRegressor with 0-1 output clipping."""
+
+    def __init__(self, random_state: int = 42):
+        if not SKLEARN_AVAILABLE:
+            raise ImportError(
+                "scikit-learn is required for RealGradientBoostingModel; "
+                "install scikit-learn or use residual_linear model type."
+            )
+        self.model = GradientBoostingRegressor(
+            n_estimators=150,
+            learning_rate=0.05,
+            max_depth=3,
+            random_state=random_state,
+        )
+
+    def fit(self, x: np.ndarray, y: np.ndarray) -> None:
+        y = np.asarray(y).reshape(-1)
+        self.model.fit(x, y)
+
+    def predict(self, x: np.ndarray) -> np.ndarray:
+        pred = self.model.predict(x)
+        return np.clip(pred, 0, 1)
 
 
 class CognitiveLoadModel:
@@ -144,21 +182,47 @@ class CognitiveLoadModel:
     for real-time cognitive load assessment.
     """
 
-    def __init__(self):
+    def __init__(self, model_type: str = "auto", use_kalman: bool = False):
+        if model_type not in {"auto", "real_gb", "residual_linear"}:
+            raise ValueError("model_type must be one of: auto, real_gb, residual_linear")
         self.nn_model = SimpleNeuralNetwork(input_size=13)  # 13 features
-        self.gb_model = GradientBoostingEnsemble(n_estimators=5)
+        self.gb_model, self.resolved_model_type = self._build_gb_model(model_type)
         self.is_trained = False
         self.feature_scaler = None
         self.training_data = []
         self.training_labels = []
+        self.requested_model_type = model_type
+        self.use_kalman = bool(use_kalman)
+        self._kalman_filter = None
+        if self.use_kalman:
+            try:
+                from src.core.kalman_filter import KalmanFilter
+                self._kalman_filter = KalmanFilter()
+            except Exception:  # pragma: no cover - defensive fallback
+                logger.warning("Kalman smoothing requested but unavailable; disabled.")
+                self.use_kalman = False
 
         # Thresholds for load levels
         self.thresholds = {
-            "low": 0.3,
-            "moderate": 0.6,
-            "high": 0.8,
-            "very_high": 0.95
+            "low": 30.0,
+            "moderate": 50.0,
+            "high": 70.0,
+            "very_high": 90.0
         }
+
+    def _build_gb_model(self, model_type: str):
+        if model_type == "residual_linear":
+            return ResidualLinearEnsemble(n_estimators=5), "residual_linear"
+        if model_type == "real_gb":
+            if not SKLEARN_AVAILABLE:
+                raise ImportError(
+                    "model_type=real_gb requested but scikit-learn is unavailable."
+                )
+            return RealGradientBoostingModel(), "real_gb"
+        # auto
+        if SKLEARN_AVAILABLE:
+            return RealGradientBoostingModel(), "real_gb"
+        return ResidualLinearEnsemble(n_estimators=5), "residual_linear"
 
     def extract_features(self, input_data: CognitiveLoadInput) -> np.ndarray:
         """Extract feature vector from input"""
@@ -225,7 +289,9 @@ class CognitiveLoadModel:
 
         # Ensemble prediction (weighted average)
         ensemble_pred = 0.6 * gb_pred + 0.4 * nn_pred
-        normalized_load = ensemble_pred * 100
+        normalized_load = float(ensemble_pred * 100)
+        if self._kalman_filter is not None:
+            normalized_load = float(self._kalman_filter.update(normalized_load))
 
         # Determine load level
         load_level = self._classify_load_level(normalized_load)
@@ -348,9 +414,15 @@ class CognitiveLoadModel:
             "is_trained": self.is_trained,
             "training_samples": len(self.training_data),
             "model_type": "ensemble",
-            "components": ["gradient_boosting", "neural_network"],
-            "ensemble_weights": {"gb": 0.6, "nn": 0.4}
+            "gb_model_type": self.resolved_model_type,
+            "kalman_enabled": self._kalman_filter is not None,
+            "components": [f"{self.resolved_model_type}_model", "neural_network"],
+            "ensemble_weights": {"gb_model": 0.6, "nn": 0.4}
         }
+
+
+# Backward-compatible alias for older imports.
+GradientBoostingEnsemble = ResidualLinearEnsemble
 
 
 # Example usage and testing

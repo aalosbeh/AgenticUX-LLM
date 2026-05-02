@@ -1,321 +1,114 @@
-# Agentic UX: Autonomous LLM Agents for Real-time Web Experience Personalization
+# Agentic UX: Reproducibility-Aligned Implementation
 
-## Overview
+## Project Status
 
-This repository contains the complete implementation of the Agentic UX system, a research project on autonomous LLM agents that reshape web interface architecture through real-time personalization based on user cognitive load and behavior patterns.
+This repository has been updated for reproducibility and manuscript-code alignment.
+Current evaluation uses synthetic demo data.
+Real user-study validation is not included yet.
 
-The system uses multi-agent orchestration with specialized agents for behavior analysis, interface adaptation, workflow optimization, and continuous learning to reduce cognitive load and improve task completion rates.
+## Implemented Components
 
-## Key Features
+- Reproducible experiment pipeline (`experiments/run_experiment.py`)
+- Synthetic demo data generation (`--synthetic-demo`)
+- Real Gradient Boosting model (`--model-type real_gb`, when sklearn backend is available)
+- Kalman filter smoothing (`--use-kalman`)
+- Isolation Forest anomaly detector (`--use-anomaly-detector`)
+- Optional LLM decision layer (`--use-llm-agent`)
+- Ablation study (`--run-ablation`)
+- Figure generation (`experiments/generate_figures.py`)
+- Table generation (`experiments/generate_tables.py`)
+- User study template tooling (`experiments/user_study_template.py --demo-template`)
 
-- **Multi-Agent Architecture**: Coordinated agents for behavior analysis, interface adaptation, workflow optimization, and learning
-- **Cognitive Load Modeling**: ML ensemble combining gradient boosting and neural networks for real-time load assessment
-- **Real-time Behavioral Analysis**: Streaming pipeline for processing mouse movements, clicks, errors, and other behavioral signals
-- **Dynamic Interface Adaptation**: CSS and DOM transformations based on cognitive load and user expertise
-- **Privacy-Preserving Design**: Data minimization, user consent management, and privacy-compliant data handling
-- **Comprehensive Metrics**: NASA-TLX, SUS, and efficiency metrics for evaluation
-- **Publication-Ready Visualizations**: High-quality figures for research papers
+## Not Yet Implemented / Not Yet Validated
 
-## Project Structure
+- Real participant dataset in this repository
+- IRB-approved user study artifacts in this repository
+- Real-world cognitive load reduction claims
+- NASA-TLX / SUS / physiological validation from real participant data
+- Production deployment claims
 
-```
-agentic_ux_code/
-├── src/
-│   ├── agents/
-│   │   ├── executive_agent.py          # High-level coordination
-│   │   ├── behavior_analysis_agent.py  # User behavior analysis
-│   │   ├── interface_agent.py          # Dynamic UI adaptation
-│   │   ├── workflow_agent.py           # Task workflow management
-│   │   └── learning_module.py          # Continuous learning
-│   ├── core/
-│   │   ├── cognitive_load_model.py     # ML models (GB + NN)
-│   │   ├── behavior_processor.py       # Streaming data pipeline
-│   │   ├── privacy_manager.py          # Privacy & consent
-│   │   └── agent_coordinator.py        # Multi-agent protocols
-│   ├── browser_extension/
-│   │   ├── manifest.json               # Chrome extension config
-│   │   ├── content_script.js           # DOM interaction
-│   │   └── background.js               # Background service
-│   └── utils/
-│       ├── metrics.py                  # Performance calculations
-│       └── data_structures.py           # Efficient containers
-├── tests/
-│   ├── test_cognitive_load.py
-│   ├── test_agents.py
-│   └── test_privacy.py
-├── experiments/
-│   ├── generate_figures.py             # Publication figure generation
-│   ├── statistical_analysis.py         # Statistical tests
-│   └── run_experiment.py               # Experiment runner
-├── figures/                            # Generated output
-├── requirements.txt
-├── setup.py
-└── README.md
-```
-
-## Installation
-
-### Prerequisites
-- Python 3.9+
-- pip
-
-### Setup
+## Reproducibility Commands
 
 ```bash
-# Clone repository
-git clone https://github.com/example/agentic-ux.git
-cd agentic-ux
-
 # Install dependencies
 pip install -r requirements.txt
 
-# Install package in development mode
-pip install -e .
-```
-
-## Quick Start
-
-### Running the Figure Generation
-
-```bash
-cd experiments
-python generate_figures.py
-```
-
-This will read the CSV data files and generate all 11 publication-quality figures.
-
-### Using the Cognitive Load Model
-
-```python
-from src.core.cognitive_load_model import CognitiveLoadModel, CognitiveLoadInput
-
-# Initialize model
-model = CognitiveLoadModel()
-
-# Create input
-input_data = CognitiveLoadInput(
-    mouse_velocity=250,
-    click_frequency=2.0,
-    time_between_actions=1.0,
-    error_count=1,
-    correction_count=0,
-    page_visits=3,
-    task_complexity=0.5,
-    task_familiarity=0.7
-)
-
-# Predict cognitive load
-result = model.predict(input_data)
-print(f"Cognitive Load: {result['cognitive_load']:.1f}")
-print(f"Level: {result['load_level']}")
-```
-
-### Using the Executive Agent
-
-```python
-import asyncio
-from src.agents.executive_agent import ExecutiveAgent, UserContext
-
-async def main():
-    agent = ExecutiveAgent()
-
-    # Register sub-agents (behavior analysis, interface adaptation, etc.)
-    # ... registration code ...
-
-    # Create user context
-    context = UserContext(
-        user_id="user_001",
-        cognitive_load=75.0,
-        task_type="form_completion",
-        page_url="https://example.com/form"
-    )
-
-    # Orchestrate adaptation
-    result = await agent.orchestrate_adaptation(
-        "user_001",
-        context,
-        "high_cognitive_load"
-    )
-
-    print(f"Adaptation result: {result}")
-
-asyncio.run(main())
-```
-
-## Core Components
-
-### Executive Agent
-Coordinates multi-agent orchestration and high-level decision making. Publishes messages through a publish-subscribe pattern and manages active user sessions.
-
-**Key Responsibilities**:
-- Agent registration and status management
-- Message routing and coordination
-- Session management
-- Strategy selection based on cognitive load
-
-### Behavior Analysis Agent
-Analyzes user interaction patterns and estimates cognitive load in real-time using behavioral signals.
-
-**Key Responsibilities**:
-- Click and mouse movement tracking
-- Error and correction detection
-- Behavioral pattern classification
-- NASA-TLX component estimation
-- Anomaly detection
-
-**Algorithms**:
-- Pattern matching for focused/exploratory/frustrated behavior
-- Multi-component cognitive load estimation
-- Weighted scoring based on behavioral features
-
-### Interface Agent
-Dynamically adapts web interfaces through CSS and DOM manipulations based on cognitive load assessment.
-
-**Key Responsibilities**:
-- Generate CSS transformations
-- Create DOM manipulation sequences
-- Template-based adaptation strategies
-- Adaptation effectiveness tracking
-
-**Adaptation Strategies**:
-- High Load: Simplify layout, hide non-essential elements, highlight primary actions
-- Moderate Load: Reorganize elements, improve visual hierarchy
-- Low Load: Minimal enhancements, enable advanced options
-
-### Workflow Agent
-Manages multi-step tasks and optimizes workflow completion through intelligent guidance.
-
-**Key Responsibilities**:
-- Task type detection and classification
-- Workflow step generation
-- Progress tracking and guidance
-- Acceleration opportunity identification
-
-**Task Types**:
-- Form completion
-- Information retrieval
-- Online transactions
-- Multi-step processes
-
-### Learning Module
-Continuously learns from user interactions to improve personalization strategies.
-
-**Key Responsibilities**:
-- User profile analysis
-- Expertise level determination
-- Preference learning
-- Performance prediction
-- Personalized strategy recommendation
-
-### Cognitive Load Model
-ML ensemble combining gradient boosting and neural networks for accurate cognitive load prediction.
-
-**Architecture**:
-- Input: 13 behavioral and contextual features
-- Gradient Boosting: 5 estimators with feature importance
-- Neural Network: 2-layer feedforward with ReLU activation
-- Ensemble: 60% GB, 40% NN weighted prediction
-
-**Features**:
-- Mouse velocity, click frequency, action timing
-- Error and correction counts, page visits
-- Physiological signals (heart rate, pupil dilation)
-- Task complexity, familiarity, time pressure
-- UI complexity metrics
-
-### Privacy Manager
-Implements privacy-preserving data handling and consent management.
-
-**Features**:
-- Multi-level consent (basic, analytics, full)
-- Data minimization rules
-- Sensitive data anonymization
-- Retention policies
-- Right to deletion support
-
-### Behavior Processor
-Real-time streaming pipeline for behavioral data processing.
-
-**Features**:
-- Event buffering and windowing
-- Metrics aggregation
-- Running statistics calculation
-- Memory-efficient streaming
-
-## Data Files
-
-The system expects CSV data files in `mnt/ux agentic/results/`:
-
-- `table1_summary_statistics.csv` - Overall metrics and statistical tests
-- `table2_nasa_tlx_components.csv` - NASA-TLX component breakdown
-- `table3_task_specific.csv` - Per-task performance metrics
-- `table4_system_comparison.csv` - Comparison with baseline systems
-- `table5_demographic_analysis.csv` - Performance by age/proficiency
-- `table6_system_performance.csv` - System technical metrics
-
-## Generated Figures
-
-The figure generation script produces 11 publication-quality visualizations:
-
-1. **Fig 1**: NASA-TLX Overall Score comparison (Agentic vs Control)
-2. **Fig 2**: NASA-TLX Components breakdown (6 components)
-3. **Fig 3**: Task Completion Time by task type
-4. **Fig 4**: Error Rates comparison
-5. **Fig 5**: Navigation Efficiency (page visits)
-6. **Fig 6**: System Usability Scale (SUS) with confidence intervals
-7. **Fig 7**: Physiological Measures (Heart Rate Variability, Pupil Dilation)
-8. **Fig 8**: Task-Specific Performance (4 task types)
-9. **Fig 9**: System Performance metrics (reaction time, CPU, memory)
-10. **Fig 10**: System Comparison (Agentic vs Rule-Based vs ML vs Static)
-11. **Fig 11**: Demographic Analysis (SUS by age and tech proficiency)
-
-All figures are saved in both PNG (300 DPI) and PDF formats.
-
-## Key Metrics
-
-- **NASA-TLX**: 6-component workload assessment (mental, physical, temporal, performance, effort, frustration)
-- **SUS Score**: System Usability Scale (0-100)
-- **Task Efficiency**: Time and page visit optimization
-- **Error Rate**: Accuracy metric
-- **Cognitive Load Reduction**: Percentage improvement
-- **Completion Time**: Task duration comparison
-
-## Testing
-
-```bash
-# Run all tests
+# Run tests
 pytest tests/
 
-# Run specific test
-pytest tests/test_cognitive_load.py
+# Run synthetic experiment (pipeline run)
+python experiments/run_experiment.py --synthetic-demo --n-samples 500 --seed 42 --use-kalman --use-anomaly-detector --model-type auto --output-dir experiments/results_p3
 
-# Run with coverage
-pytest --cov=src tests/
+# Run synthetic experiment with LLM decision layer
+python experiments/run_experiment.py --synthetic-demo --n-samples 500 --seed 42 --use-kalman --use-anomaly-detector --use-llm-agent --model-type auto --output-dir experiments/results_phase2
+
+# Run ablation study
+python experiments/run_experiment.py --synthetic-demo --n-samples 500 --seed 42 --run-ablation --output-dir experiments/results_phase2
+
+# Run statistical analysis
+python experiments/statistical_analysis.py --results-csv experiments/results_phase2/results.csv --output-dir experiments/results_phase2
+
+# Generate figures
+python experiments/generate_figures.py --results-dir experiments/results_phase2 --output-dir experiments/figures
+
+# Generate user study template (empty headers only)
+python experiments/user_study_template.py --demo-template --output-dir experiments/user_study_results
 ```
 
-## Performance Characteristics
+## LLM Usage
 
-- **Cognitive Load Prediction**: Real-time inference (<100ms)
-- **Behavioral Analysis**: Streaming with 5-second windows
-- **Message Processing**: Async with priority queueing
-- **Memory Efficiency**: Rolling windows, LRU caching
-- **Scalability**: Supports 10,000+ concurrent users
+- The LLM module is an interface adaptation decision layer.
+- The LLM module does not directly improve regression prediction metrics.
+- OpenAI mode requires `OPENAI_API_KEY` and the `openai` package.
+- Mock mode is deterministic and labeled as mock output.
 
-## Browser Extension
+## Results Summary (from existing CSV outputs only)
 
-The system includes a Chrome extension (`src/browser_extension/`) that:
-- Captures user interactions (clicks, scrolls, keypresses)
-- Sends behavioral data to the agent system
-- Applies CSS and DOM adaptations
-- Manages communication with backend
+### Model Performance
 
-## Future Work
+| Source | model_type | kalman_enabled | anomaly_enabled | llm_enabled | MAE | MSE | RMSE | R2 |
+|---|---|---|---|---|---:|---:|---:|---:|
+| `experiments/results_p3/results.csv` | real_gb | True | True | False | 6.635687063348048 | 67.00187671515162 | 8.185467409693329 | -0.04598576583273539 |
+| `experiments/results_phase2/results.csv` | real_gb | True | True | True | 6.635687063348048 | 67.00187671515162 | 8.185467409693329 | -0.04598576583273539 |
 
-- Integration with large language models for natural language guidance
-- Real-time eye tracking for physiological signals
-- Multi-modal interface optimization
-- Cross-domain workflow support
-- Advanced personalization with federated learning
+### Ablation Results (`experiments/results_p3/ablation_results.csv`)
+
+| config_name | MAE | MSE | RMSE | R2 |
+|---|---:|---:|---:|---:|
+| baseline (residual_linear) | 7.870473395688209 | 87.41419934516867 | 9.349556104177816 | -0.7233104178392378 |
+| real_gb | 5.624972444576851 | 44.96611523564154 | 6.7056778356584905 | 0.11352417094896616 |
+| +kalman | 6.297116177221474 | 58.470707346282815 | 7.646614109936686 | -0.1527095124488782 |
+| +anomaly | 6.501181756748796 | 62.36884327978053 | 7.897394714700572 | -0.2295585634574473 |
+| +llm | 6.410912513626985 | 60.637063319096086 | 7.786980372332788 | -0.19541772055081186 |
+
+### Ablation Results (`experiments/results_phase2/ablation_results.csv`)
+
+| config_name | MAE | MSE | RMSE | R2 |
+|---|---:|---:|---:|---:|
+| baseline (residual_linear) | 7.373071796671868 | 81.94946041649422 | 9.052594126353739 | -0.27933683824623556 |
+| real_gb | 5.300676043586282 | 42.68489575823288 | 6.533367872562579 | 0.3336336895609796 |
+| +kalman | 6.578125104816931 | 65.77394506949253 | 8.110113751945315 | -0.02681616811780252 |
+| +anomaly | 6.698198660968514 | 68.35316822228089 | 8.267597487921197 | -0.06708117018919668 |
+| +llm | 6.636023706796224 | 67.17087379596231 | 8.195783903688671 | -0.048624028365989114 |
+
+### LLM Decision Summary (`experiments/results_phase2/llm_decision_summary.csv`)
+
+| config_name | simplify_ui | highlight_relevant | no_change | request_human_review | total_decisions |
+|---|---:|---:|---:|---:|---:|
+| +llm | 141 | 109 | 250 | 0 | 500 |
+
+## Disclaimer
+
+Synthetic demo results are not evidence of real-world user performance.
+Unsupported manuscript claims should not be made unless backed by data.
+
+## Reality and Planning Documents
+
+- [Reality Check](REALITY_CHECK.md)
+- [Engineering Roadmap](ROADMAP.md)
+- [Reviewer Response Checklist](REVIEWER_RESPONSE_CHECKLIST.md)
+- [Reproducibility Appendix](REPRODUCIBILITY_APPENDIX.md)
+- [Data README](data/README.md)
 
 ## Citation
 
@@ -336,17 +129,4 @@ MIT License - see LICENSE file for details
 ## Contributors
 
 - Research Team
-
-## Support
-
-For issues, questions, or contributions:
-1. Open an issue on GitHub
-2. Submit a pull request
-3. Contact the research team
-
-## References
-
-- NASA Task Load Index (Hart & Staveland, 1988)
-- System Usability Scale (Brooke, 1996)
-- Cognitive Load Theory (Sweller, 1988)
-- Multi-Agent Reinforcement Learning papers
+- Subhanjan Bikram K C — Student Research Assistant; reproducibility alignment, ML pipeline, ablation study, LLM decision layer, documentation support.

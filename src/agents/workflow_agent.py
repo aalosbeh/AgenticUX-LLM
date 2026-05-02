@@ -8,7 +8,7 @@ import json
 from typing import Dict, List, Any, Optional, Set, Tuple
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 import re
 
 logging.basicConfig(level=logging.INFO)
@@ -47,7 +47,7 @@ class WorkflowPlan:
     user_id: str
     start_url: str
     steps: List[WorkflowStep]
-    created_at: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     current_step: int = 0
     total_time_estimate: float = 0.0
     optimizations_applied: List[str] = field(default_factory=list)
@@ -140,7 +140,7 @@ class WorkflowAgent:
         task_type = self._detect_task_type(current_url, page_content, user_goal)
 
         # Create workflow plan
-        workflow_id = f"wf_{user_id}_{int(datetime.utcnow().timestamp())}"
+        workflow_id = f"wf_{user_id}_{int(datetime.now(timezone.utc).timestamp())}"
         steps = self._generate_workflow_steps(task_type, current_url, page_content)
 
         plan = WorkflowPlan(

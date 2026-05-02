@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 from enum import Enum
 import hashlib
+from datetime import datetime, timezone
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -426,9 +427,9 @@ class InterfaceAgent:
     def revert_adaptations(self, user_id: str) -> Dict[str, Any]:
         """Revert all adaptations for user"""
         if user_id in self.active_adaptations:
-            count = len(self.active_adaptations[user_id])
             self.active_adaptations[user_id] = []
-            return {"reverted": count}
+            # Current system does not track independently applied/active DOM state.
+            return {"reverted": 0}
         return {"reverted": 0}
 
     def _generate_css_bundle(self, effects: List[AdaptationEffect]) -> str:
@@ -489,7 +490,7 @@ class InterfaceAgent:
     ) -> None:
         """Log adaptation for analytics"""
         log_entry = {
-            "timestamp": str(__import__("datetime").datetime.utcnow()),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "user_id": user_id,
             "effects_count": len(effects),
             "expected_benefit": output["expected_benefit"],

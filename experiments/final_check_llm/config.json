@@ -1,0 +1,18 @@
+{
+  "input_csv": null,
+  "output_dir": "experiments\\final_check_llm",
+  "synthetic_demo": true,
+  "n_samples": 1000,
+  "seed": 42,
+  "use_llm_agent": true,
+  "use_kalman": false,
+  "use_anomaly_detector": false,
+  "model_type_requested": "auto",
+  "model_type_resolved": "real_gb",
+  "kalman_enabled": false,
+  "llm_mode": "enabled",
+  "anomaly_detector_enabled": false,
+  "anomaly_detector_mode": "disabled",
+  "resolved_data_source": "synthetic_demo",
+  "model": "CognitiveLoadModel"
+}

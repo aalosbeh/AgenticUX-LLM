@@ -6,7 +6,7 @@ Metrics for evaluating system and user performance.
 import logging
 from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 import numpy as np
 
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +29,7 @@ class PerformanceMetrics:
 
     def __post_init__(self):
         if not self.timestamp:
-            self.timestamp = datetime.utcnow().isoformat()
+            self.timestamp = datetime.now(timezone.utc).isoformat()
 
 
 class MetricsCalculator:

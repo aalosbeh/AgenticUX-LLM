@@ -7,7 +7,7 @@ import logging
 import json
 from typing import Dict, List, Any, Tuple, Optional
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from collections import defaultdict, deque
 import numpy as np
 
@@ -28,7 +28,7 @@ class UserProfile:
     optimal_load_range: Tuple[float, float] = (30.0, 60.0)
     task_completion_rates: Dict[str, float] = field(default_factory=dict)
     average_task_time: Dict[str, float] = field(default_factory=dict)
-    last_updated: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    last_updated: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 @dataclass
@@ -82,13 +82,13 @@ class LearningModule:
         user_satisfaction: Optional[float] = None
     ) -> None:
         """Record a user interaction event"""
-        event_id = f"evt_{user_id}_{int(datetime.utcnow().timestamp() * 1000)}"
+        event_id = f"evt_{user_id}_{int(datetime.now(timezone.utc).timestamp() * 1000)}"
 
         event = InteractionEvent(
             event_id=event_id,
             user_id=user_id,
             task_type=task_type,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             duration=duration,
             success=success,
             adaptations_used=adaptations_used,
@@ -160,7 +160,7 @@ class LearningModule:
         else:
             profile.preferred_task_pace = "slow"
 
-        profile.last_updated = datetime.utcnow().isoformat()
+        profile.last_updated = datetime.now(timezone.utc).isoformat()
 
         return profile
 

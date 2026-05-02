@@ -9,7 +9,7 @@ import json
 from typing import Dict, List, Any, Optional, Callable, Set
 from dataclasses import dataclass, field, asdict
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import defaultdict
 import uuid
 
@@ -33,7 +33,7 @@ class ProtocolMessage:
     receiver_ids: List[str] = field(default_factory=list)
     message_type: str = "standard"
     payload: Dict[str, Any] = field(default_factory=dict)
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     priority: int = 5  # 1-10
     requires_response: bool = False
     response_timeout: float = 5.0  # seconds
@@ -49,7 +49,7 @@ class ProtocolResponse:
     success: bool = True
     data: Dict[str, Any] = field(default_factory=dict)
     error: Optional[str] = None
-    timestamp: str = field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class AgentRegistry:
@@ -71,7 +71,7 @@ class AgentRegistry:
         self.agents[agent_id] = {
             "type": agent_type,
             "handler": handler,
-            "registered_at": datetime.utcnow().isoformat(),
+            "registered_at": datetime.now(timezone.utc).isoformat(),
         }
         self.capabilities[agent_id] = set(capabilities)
         self.status[agent_id] = "idle"

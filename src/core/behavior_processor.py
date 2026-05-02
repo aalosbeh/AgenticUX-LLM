@@ -7,7 +7,7 @@ import logging
 from typing import Dict, List, Any, Optional, Tuple
 from dataclasses import dataclass, field
 from collections import deque
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import numpy as np
 import threading
 
@@ -76,12 +76,12 @@ class BehaviorProcessor:
             events = list(self.event_buffer[user_id])
 
             # Filter events within window
-            current_time = datetime.utcnow()
+            current_time = datetime.now(timezone.utc)
             cutoff_time = current_time - timedelta(seconds=self.window_size)
 
             window_events = [
                 e for e in events
-                if datetime.fromisoformat(e.timestamp) > cutoff_time
+                if self._ensure_utc(datetime.fromisoformat(e.timestamp)) > cutoff_time
             ]
 
             if not window_events:
@@ -108,7 +108,7 @@ class BehaviorProcessor:
     ) -> ProcessedMetrics:
         """Calculate aggregated metrics from events"""
         metrics = ProcessedMetrics(
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             user_id=user_id,
             window_size=window_size
         )
@@ -192,6 +192,13 @@ class BehaviorProcessor:
             if user_id in self.metrics_buffer:
                 del self.metrics_buffer[user_id]
 
+    @staticmethod
+    def _ensure_utc(dt: datetime) -> datetime:
+        """Normalize parsed datetimes to timezone-aware UTC."""
+        if dt.tzinfo is None:
+            return dt.replace(tzinfo=timezone.utc)
+        return dt.astimezone(timezone.utc)
+
     def get_processor_stats(self) -> Dict[str, Any]:
         """Get processor statistics"""
         with self.lock:
@@ -221,7 +228,7 @@ class StreamingAggregator:
             "total_events": 0,
             "clicks": 0,
             "errors": 0,
-            "last_action_time": datetime.utcnow(),
+            "last_action_time": datetime.now(timezone.utc),
             "idle_duration": 0.0,
         }
 
@@ -236,7 +243,7 @@ class StreamingAggregator:
             self.stats["errors"] += 1
 
         # Calculate idle time
-        event_time = datetime.fromisoformat(event.timestamp)
+        event_time = self._ensure_utc(datetime.fromisoformat(event.timestamp))
         time_since_last = (event_time - self.stats["last_action_time"]).total_seconds()
         if time_since_last > 5:
             self.stats["idle_duration"] += time_since_last
@@ -250,8 +257,8 @@ class StreamingAggregator:
         events_in_buffer = len(self.event_queue)
 
         if events_in_buffer > 0:
-            first_event_time = datetime.fromisoformat(list(self.event_queue)[0].timestamp)
-            last_event_time = datetime.fromisoformat(list(self.event_queue)[-1].timestamp)
+            first_event_time = self._ensure_utc(datetime.fromisoformat(list(self.event_queue)[0].timestamp))
+            last_event_time = self._ensure_utc(datetime.fromisoformat(list(self.event_queue)[-1].timestamp))
             duration = (last_event_time - first_event_time).total_seconds()
         else:
             duration = 0
@@ -275,7 +282,7 @@ class StreamingAggregator:
             "total_events": 0,
             "clicks": 0,
             "errors": 0,
-            "last_action_time": datetime.utcnow(),
+            "last_action_time": datetime.now(timezone.utc),
             "idle_duration": 0.0,
         }
 
@@ -298,7 +305,7 @@ if __name__ == "__main__":
         event = RawEvent(
             event_type="click" if i % 3 == 0 else "mousemove",
             user_id=user_id,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             data={"x": 100 + i * 10, "y": 200 + i * 5} if i % 3 == 0 else {"x": 100 + i * 10, "y": 200 + i * 5},
         )
         processor.add_event(event)
@@ -325,7 +332,7 @@ if __name__ == "__main__":
         event = RawEvent(
             event_type="click" if i % 2 == 0 else "error" if i % 5 == 0 else "mousemove",
             user_id=user_id,
-            timestamp=datetime.utcnow().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             data={}
         )
         aggregator.add_event(event)

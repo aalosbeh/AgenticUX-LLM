@@ -8,6 +8,7 @@ from src.agents.behavior_analysis_agent import BehaviorAnalysisAgent
 from src.agents.interface_agent import InterfaceAgent
 from src.agents.workflow_agent import WorkflowAgent
 from src.agents.learning_module import LearningModule
+from src.agents.llm_agent import LLMAgent
 from src.core.cognitive_load_model import CognitiveLoadModel
 from src.core.behavior_processor import BehaviorProcessor
 from src.core.privacy_manager import PrivacyManager
@@ -19,6 +20,7 @@ __all__ = [
     "InterfaceAgent",
     "WorkflowAgent",
     "LearningModule",
+    "LLMAgent",
     "CognitiveLoadModel",
     "BehaviorProcessor",
     "PrivacyManager",
