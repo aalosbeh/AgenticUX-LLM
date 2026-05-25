@@ -132,7 +132,7 @@ class GradientBoostingEnsemble:
         predictions = np.full(x.shape[0], self.initial_prediction)
 
         for weights in self.estimators:
-            predictions += self.learning_rate * np.dot(x, weights)
+            predictions += self.learning_rate * np.dot(x, weights).flatten()
 
         # Clip to [0, 1] range
         return np.clip(predictions, 0, 1)
@@ -154,10 +154,10 @@ class CognitiveLoadModel:
 
         # Thresholds for load levels
         self.thresholds = {
-            "low": 0.3,
-            "moderate": 0.6,
-            "high": 0.8,
-            "very_high": 0.95
+            "low": 20,
+            "moderate": 40,
+            "high": 60,
+            "very_high": 80
         }
 
     def extract_features(self, input_data: CognitiveLoadInput) -> np.ndarray:
