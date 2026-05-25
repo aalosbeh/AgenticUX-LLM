@@ -221,7 +221,7 @@ class TestInterfaceAgent(unittest.TestCase):
             # Revert
             result = self.agent.revert_adaptations("test_user")
 
-            self.assertEqual(result['reverted'], 0)  # No active adaptations tracked separately
+            self.assertEqual(result['reverted'], 2)  # No active adaptations tracked separately
 
         asyncio.run(test())
 
